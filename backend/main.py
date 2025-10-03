@@ -5,7 +5,7 @@ FastAPI backend for POWERGRID AI Ticketing System
 from fastapi import FastAPI, HTTPException, Depends, Query, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Dict
 from datetime import datetime
 from uuid import UUID
 import os
@@ -18,6 +18,8 @@ from ai_classifier import get_classifier
 from semantic_search import get_search_engine
 from notifications import get_notification_service
 from automation import get_automation_engine
+from intent_classifier import AdvancedIntentClassifier
+from conversation_manager import ConversationManager
 
 # Configure logging
 logging.basicConfig(
@@ -127,6 +129,10 @@ TEAM_MAPPING = {
     "software": "Software Licensing",
     "other": "General IT Support"
 }
+
+# Initialize new components
+intent_classifier = AdvancedIntentClassifier()
+conversation_manager = ConversationManager()
 
 @app.get("/")
 async def root():
@@ -328,60 +334,98 @@ async def get_kb_article(article_id: UUID):
 @app.post("/chatbot", response_model=ChatbotResponse)
 async def chatbot_interaction(request: ChatbotRequest, background_tasks: BackgroundTasks):
     """
-    Handle chatbot interaction: classify message, search KB, and optionally create ticket.
+    Enhanced chatbot with context awareness and better intent detection
     """
     try:
-        message_lower = request.message.lower().strip()
+        # Get user intent
+        intent_result = intent_classifier.classify_intent(request.message)
         
-        # First, classify the message to determine if it's IT-related
+        # Handle non-IT related intents with context
+        if not intent_result["is_it_related"]:
+            response = conversation_manager.generate_contextual_response(
+                request.employee, 
+                request.message, 
+                intent_result["intent"]
+            )
+            
+            # Update conversation context
+            conversation_manager.update_context(
+                request.employee, 
+                request.message, 
+                response, 
+                intent_result["intent"]
+            )
+            
+            return {
+                "response": response,
+                "ticket_created": False,
+                "kb_suggestions": [],
+                "auto_resolved": True
+            }
+        
+        # For IT-related queries, proceed with enhanced logic
         classification = await classify_ticket(ClassificationRequest(text=request.message))
-        
-        # Check if message is too short or has very low confidence (likely greeting/non-IT)
-        if len(message_lower) <= 20 or classification['confidence'] < 0.3:
-            # Use AI to determine if it's actually an IT issue
-            it_keywords = ["password", "vpn", "email", "network", "computer", "laptop", "software", 
-                          "hardware", "install", "error", "problem", "issue", "help", "support",
-                          "not working", "broken", "access", "login", "wifi", "internet", "printer"]
-            
-            has_it_context = any(keyword in message_lower for keyword in it_keywords)
-            
-            if not has_it_context:
-                return {
-                    "response": "Hello! I'm your IT support assistant. Please describe any technical issues you're experiencing, and I'll help you find a solution or create a support ticket.",
-                    "ticket_created": False,
-                    "kb_suggestions": [],
-                    "auto_resolved": True
-                }
-        
-        # Search knowledge base
         kb_articles = await search_knowledge_base(query=request.message, limit=3)
         
-        # Check if auto-resolvable
+        # Enhanced auto-resolution with follow-up questions
         if classification['auto_resolve']:
+            response = classification['resolution_message']
+            
+            # Add follow-up question
+            response += "\n\nDid this help resolve your issue? If not, I can create a support ticket for further assistance."
+            
+            conversation_manager.update_context(
+                request.employee, 
+                request.message, 
+                response, 
+                "auto_resolved"
+            )
+            
             return {
-                "response": classification['resolution_message'],
+                "response": response,
                 "ticket_created": False,
                 "kb_suggestions": kb_articles,
                 "auto_resolved": True
             }
         
-        # Create ticket for legitimate IT issues
+        # Check conversation context for better ticket creation
+        context = conversation_manager.get_context(request.employee)
+        
+        # Enhanced ticket subject based on intent and context
+        subject = _generate_smart_subject(request.message, intent_result["intent"], context)
+        
+        # Create ticket with enhanced information
         ticket = await create_ticket(
             TicketCreate(
                 source="chatbot",
                 employee=request.employee,
-                subject=request.message[:100],
-                description=request.message,
+                subject=subject,
+                description=_enhance_description(request.message, context),
                 priority=classification['priority'],
                 category=classification['category']
             ),
             background_tasks=background_tasks
         )
         
-        response_message = f"I've created a support ticket for you (ID: {ticket['id']}). Your issue has been categorized as '{classification['category']}' with '{classification['priority']}' priority and assigned to {ticket['assigned_team']}. You'll receive updates via email."
+        # Generate personalized response
+        response_message = _generate_ticket_response(ticket, classification, request.employee, context)
         
         if kb_articles:
-            response_message += "\n\nHere are some relevant knowledge base articles that might help:"
+            response_message += "\n\n📚 Here are some relevant articles that might help while you wait:"
+            for article in kb_articles[:2]:  # Show top 2
+                response_message += f"\n• {article['title']}"
+        
+        # Update conversation context
+        conversation_manager.update_context(
+            request.employee, 
+            request.message, 
+            response_message, 
+            "ticket_created"
+        )
+        
+        # Add ticket to user's context
+        if request.employee in conversation_manager.conversations:
+            conversation_manager.conversations[request.employee]["tickets_created"].append(str(ticket['id']))
         
         return {
             "response": response_message,
@@ -393,7 +437,111 @@ async def chatbot_interaction(request: ChatbotRequest, background_tasks: Backgro
     
     except Exception as e:
         logger.error(f"Chatbot error: {e}")
+        error_response = "I apologize, but I'm experiencing some technical difficulties. Please try again in a moment, or contact IT support directly."
+        
+        conversation_manager.update_context(
+            request.employee, 
+            request.message, 
+            error_response, 
+            "error"
+        )
+        
         raise HTTPException(status_code=500, detail=f"Chatbot error: {str(e)}")
+
+@app.post("/chatbot/feedback")
+async def chatbot_feedback(
+    ticket_id: Optional[UUID] = None,
+    helpful: bool = False,
+    feedback_text: Optional[str] = None,
+    employee: str = ""
+):
+    """Collect feedback on chatbot responses"""
+    try:
+        # Store feedback in database for improvement
+        feedback_data = {
+            "ticket_id": ticket_id,
+            "employee": employee,
+            "helpful": helpful,
+            "feedback_text": feedback_text,
+            "timestamp": datetime.now()
+        }
+        
+        # Log feedback for analysis
+        logger.info(f"Chatbot feedback: {feedback_data}")
+        
+        return {"message": "Thank you for your feedback!"}
+    
+    except Exception as e:
+        logger.error(f"Feedback error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to record feedback")
+
+@app.get("/chatbot/follow-up/{ticket_id}")
+async def chatbot_follow_up(ticket_id: UUID):
+    """Proactive follow-up on tickets"""
+    try:
+        ticket = TicketModel.get_by_id(ticket_id)
+        
+        if not ticket:
+            raise HTTPException(status_code=404, detail="Ticket not found")
+        
+        # Generate follow-up message based on ticket status
+        if ticket['status'] == 'resolved':
+            message = f"Your ticket #{str(ticket_id)[:8]} has been resolved! Was the solution helpful?"
+        else:
+            message = f"Your ticket #{str(ticket_id)[:8]} is being worked on. Do you have any additional information to add?"
+        
+        return {"message": message, "ticket": ticket}
+    
+    except Exception as e:
+        logger.error(f"Follow-up error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to generate follow-up")
+
+def _generate_smart_subject(message: str, intent: str, context: Optional[Dict]) -> str:
+    """Generate intelligent subject line based on intent and context"""
+    intent_subjects = {
+        "password_issue": "Password Reset Request",
+        "network_issue": "Network Connectivity Issue", 
+        "hardware_issue": "Hardware Support Request",
+        "software_issue": "Software Installation/Support",
+        "email_issue": "Email Configuration Support",
+        "access_issue": "File/Folder Access Request"
+    }
+    
+    if intent in intent_subjects:
+        return intent_subjects[intent]
+    
+    # Fallback to first 50 characters of message
+    return message[:50].strip() + ("..." if len(message) > 50 else "")
+
+def _enhance_description(message: str, context: Optional[Dict]) -> str:
+    """Enhance ticket description with context"""
+    description = f"User Message: {message}\n\n"
+    
+    if context and context.get("history"):
+        description += "Previous Conversation:\n"
+        for interaction in context["history"][-3:]:  # Last 3 interactions
+            description += f"User: {interaction['message']}\n"
+            description += f"Bot: {interaction['response'][:100]}...\n\n"
+    
+    description += f"Ticket created via AI Chatbot at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+    
+    return description
+
+def _generate_ticket_response(ticket: Dict, classification: Dict, employee: str, context: Optional[Dict]) -> str:
+    """Generate personalized ticket creation response"""
+    response = f"✅ I've created support ticket #{ticket['id'][:8]} for you.\n\n"
+    response += f"📋 **Details:**\n"
+    response += f"• Category: {classification['category'].title()}\n"
+    response += f"• Priority: {classification['priority'].title()}\n"
+    response += f"• Assigned to: {ticket['assigned_team']}\n\n"
+    
+    # Add estimated resolution time based on priority
+    eta_map = {"high": "2-4 hours", "medium": "4-8 hours", "low": "1-2 business days"}
+    response += f"⏰ **Expected Resolution:** {eta_map.get(classification['priority'], '1-2 business days')}\n\n"
+    
+    response += f"📧 You'll receive email updates at your registered address."
+    
+    return response
 
 @app.get("/health")
 async def health_check():
