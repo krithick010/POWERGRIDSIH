@@ -1,127 +1,85 @@
 "use client"
 
-import type React from "react"
-
 import { useState } from "react"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { MessageSquare, LayoutDashboard, Zap } from "lucide-react"
+import { Dashboard } from "@/components/dashboard"
 import { Chatbot } from "@/components/chatbot"
-import { TicketDashboard } from "@/components/ticket-dashboard"
+import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { User, Sparkles, Zap } from "lucide-react"
+import { motion } from "framer-motion"
 
 export default function Home() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [employee, setEmployee] = useState("")
-  const [employeeInput, setEmployeeInput] = useState("")
+  const [showDashboard, setShowDashboard] = useState(false)
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (employeeInput.trim()) {
-      setEmployee(employeeInput.trim())
-      setIsLoggedIn(true)
+  const handleLogin = () => {
+    if (employee.trim()) {
+      setShowDashboard(true)
     }
   }
 
-  if (!isLoggedIn) {
+  if (showDashboard) {
     return (
-      <div className="min-h-screen flex items-center justify-center p-4">
-        <Card className="w-full max-w-md p-8">
-          <div className="flex items-center gap-2 mb-6">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <Zap className="w-6 h-6 text-primary-foreground" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold">POWERGRID</h1>
-              <p className="text-sm text-muted-foreground">IT Support Portal</p>
-            </div>
-          </div>
-
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="employee">Employee ID or Name</Label>
-              <Input
-                id="employee"
-                value={employeeInput}
-                onChange={(e) => setEmployeeInput(e.target.value)}
-                placeholder="e.g., Rajesh Kumar (PG12345)"
-                className="bg-input"
-                required
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <Input id="password" type="password" placeholder="Enter your password" className="bg-input" disabled />
-              <p className="text-xs text-muted-foreground">
-                SSO integration placeholder - authentication not implemented
-              </p>
-            </div>
-
-            <Button type="submit" className="w-full">
-              Sign In
-            </Button>
-
-            <p className="text-xs text-center text-muted-foreground">
-              For demo purposes, just enter your name to continue
-            </p>
-          </form>
-        </Card>
-      </div>
+      <>
+        <Dashboard employee={employee} />
+        <Chatbot employee={employee} />
+      </>
     )
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <header className="border-b border-border bg-card">
-        <div className="container mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center">
-              <Zap className="w-6 h-6 text-primary-foreground" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4">
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.5 }}
+        className="max-w-md w-full"
+      >
+        <Card className="glass border-white/20 shadow-2xl">
+          <CardHeader className="text-center pb-8">
+            <motion.div
+              initial={{ y: -20 }}
+              animate={{ y: 0 }}
+              className="mx-auto w-16 h-16 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center mb-4"
+            >
+              <Zap className="h-8 w-8 text-white" />
+            </motion.div>
+            <CardTitle className="text-3xl font-bold text-white mb-2">
+              POWERGRID
+            </CardTitle>
+            <p className="text-blue-100">AI-Powered IT Support System</p>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-white">Employee ID</label>
+              <div className="relative">
+                <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Enter your employee ID..."
+                  value={employee}
+                  onChange={(e) => setEmployee(e.target.value)}
+                  onKeyPress={(e) => e.key === "Enter" && handleLogin()}
+                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-gray-300 focus:bg-white/20"
+                />
+              </div>
             </div>
-            <div>
-              <h1 className="text-lg font-bold">POWERGRID IT Support</h1>
-              <p className="text-xs text-muted-foreground">AI-Powered Ticketing System</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <p className="text-sm text-muted-foreground hidden sm:block">{employee}</p>
-            <Button variant="outline" size="sm" onClick={() => setIsLoggedIn(false)}>
-              Sign Out
+            
+            <Button
+              onClick={handleLogin}
+              disabled={!employee.trim()}
+              className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 shadow-lg hover:shadow-xl transition-all duration-200"
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Enter Dashboard
             </Button>
-          </div>
-        </div>
-      </header>
-
-      <main className="flex-1 container mx-auto p-4">
-        <Tabs defaultValue="chatbot" className="h-full">
-          <TabsList className="grid w-full max-w-md grid-cols-2 mb-4">
-            <TabsTrigger value="chatbot" className="flex items-center gap-2">
-              <MessageSquare className="w-4 h-4" />
-              AI Assistant
-            </TabsTrigger>
-            <TabsTrigger value="dashboard" className="flex items-center gap-2">
-              <LayoutDashboard className="w-4 h-4" />
-              My Tickets
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="chatbot" className="h-[calc(100vh-200px)]">
-            <Card className="h-full flex flex-col">
-              <Chatbot employee={employee} />
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="dashboard" className="h-[calc(100vh-200px)]">
-            <Card className="h-full">
-              <TicketDashboard employee={employee} />
-            </Card>
-          </TabsContent>
-        </Tabs>
-      </main>
+            
+            <div className="text-center text-xs text-blue-200">
+              Secure • AI-Enhanced • Real-time Support
+            </div>
+          </CardContent>
+        </Card>
+      </motion.div>
     </div>
   )
 }

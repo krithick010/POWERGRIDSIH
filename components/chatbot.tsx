@@ -1,14 +1,31 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Send, Bot, User, Sparkles } from "lucide-react"
+import { 
+  Send, 
+  Bot, 
+  User, 
+  Sparkles, 
+  MessageCircle,
+  Zap,
+  CheckCircle,
+  AlertCircle,
+  Info,
+  ExternalLink,
+  ThumbsUp,
+  ThumbsDown,
+  Copy,
+  Minimize2,
+  Maximize2
+} from "lucide-react"
 import { api, type KBArticle } from "@/lib/api"
+import { motion, AnimatePresence } from "framer-motion"
+import { cn } from "@/lib/utils"
 
 interface Message {
   id: string
@@ -17,6 +34,7 @@ interface Message {
   ticketId?: string
   kbSuggestions?: KBArticle[]
   autoResolved?: boolean
+  timestamp: Date
 }
 
 interface ChatbotProps {
@@ -28,12 +46,15 @@ export function Chatbot({ employee }: ChatbotProps) {
     {
       id: "1",
       role: "assistant",
-      content: `Hello! I'm the POWERGRID IT Support Assistant. I can help you with IT issues, answer questions, and create support tickets. How can I assist you today?`,
+      content: `👋 Hello! I'm ARIA, your AI-powered IT support assistant. I'm here to help you with technical issues, answer questions, and create support tickets when needed. What can I help you with today?`,
+      timestamp: new Date(),
     },
   ])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [isMinimized, setIsMinimized] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
@@ -50,6 +71,7 @@ export function Chatbot({ employee }: ChatbotProps) {
       id: Date.now().toString(),
       role: "user",
       content: input,
+      timestamp: new Date(),
     }
 
     setMessages((prev) => [...prev, userMessage])
@@ -66,6 +88,7 @@ export function Chatbot({ employee }: ChatbotProps) {
         ticketId: response.ticket_id,
         kbSuggestions: response.kb_suggestions,
         autoResolved: response.auto_resolved,
+        timestamp: new Date(),
       }
 
       setMessages((prev) => [...prev, assistantMessage])
@@ -73,7 +96,8 @@ export function Chatbot({ employee }: ChatbotProps) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "Sorry, I encountered an error. Please try again or contact IT support at ext. 2222.",
+        content: "🚨 Sorry, I encountered an error. Please try again or contact IT support at ext. 2222.",
+        timestamp: new Date(),
       }
       setMessages((prev) => [...prev, errorMessage])
     } finally {
@@ -88,98 +112,243 @@ export function Chatbot({ employee }: ChatbotProps) {
     }
   }
 
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text)
+  }
+
+  const formatTimestamp = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+  }
+
   return (
-    <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <div key={message.id} className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}>
-            {message.role === "assistant" && (
-              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Bot className="w-5 h-5 text-primary" />
-              </div>
-            )}
-
-            <div className={`flex flex-col gap-2 max-w-[80%]`}>
-              <Card className={`p-3 ${message.role === "user" ? "bg-primary text-primary-foreground" : "bg-card"}`}>
-                <p className="text-sm leading-relaxed whitespace-pre-wrap">{message.content}</p>
-              </Card>
-
-              {message.autoResolved && (
-                <Badge variant="secondary" className="w-fit">
-                  <Sparkles className="w-3 h-3 mr-1" />
-                  Auto-resolved
-                </Badge>
-              )}
-
-              {message.ticketId && (
-                <Badge variant="outline" className="w-fit">
-                  Ticket ID: {message.ticketId.slice(0, 8)}
-                </Badge>
-              )}
-
-              {message.kbSuggestions && message.kbSuggestions.length > 0 && (
-                <div className="space-y-2 mt-2">
-                  <p className="text-xs text-muted-foreground">Related articles:</p>
-                  {message.kbSuggestions.map((article) => (
-                    <Card
-                      key={article.id}
-                      className="p-3 bg-secondary/50 hover:bg-secondary cursor-pointer transition-colors"
-                    >
-                      <p className="text-sm font-medium">{article.title}</p>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        {article.category}
-                        {article.relevance_score && (
-                          <span className="ml-2">• {Math.round(article.relevance_score * 100)}% match</span>
-                        )}
-                      </p>
-                    </Card>
-                  ))}
+    <div className="fixed bottom-6 right-6 z-50">
+      <AnimatePresence>
+        {!isMinimized ? (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, y: 20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.8, y: 20 }}
+            transition={{ type: "spring", damping: 25, stiffness: 300 }}
+            className="w-96 h-[600px] bg-white/95 backdrop-blur-xl border border-gray-200/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+          >
+            {/* Header */}
+            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 text-white">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="relative">
+                    <Bot className="h-6 w-6" />
+                    <div className="absolute -top-1 -right-1 w-3 h-3 bg-green-400 rounded-full animate-pulse" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold">ARIA</h3>
+                    <p className="text-xs text-blue-100">AI Support Assistant</p>
+                  </div>
                 </div>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setIsMinimized(true)}
+                  className="text-white hover:bg-white/20 h-8 w-8 p-0"
+                >
+                  <Minimize2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            {/* Messages */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-50/50 to-white/80">
+              <AnimatePresence>
+                {messages.map((message) => (
+                  <motion.div
+                    key={message.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ duration: 0.3 }}
+                    className={cn(
+                      "flex gap-3",
+                      message.role === "user" ? "justify-end" : "justify-start"
+                    )}
+                  >
+                    {message.role === "assistant" && (
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                          <Bot className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                    )}
+
+                    <div className={cn(
+                      "max-w-[85%] rounded-2xl p-3 shadow-sm",
+                      message.role === "user"
+                        ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white ml-auto"
+                        : "bg-white border border-gray-200"
+                    )}>
+                      <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                        {message.content}
+                      </p>
+                      
+                      <div className="flex items-center justify-between mt-2">
+                        <span className={cn(
+                          "text-xs",
+                          message.role === "user" ? "text-blue-100" : "text-gray-500"
+                        )}>
+                          {formatTimestamp(message.timestamp)}
+                        </span>
+                        
+                        {message.role === "assistant" && (
+                          <div className="flex gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => copyToClipboard(message.content)}
+                              className="h-6 w-6 p-0 text-gray-400 hover:text-gray-600"
+                            >
+                              <Copy className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 text-gray-400 hover:text-green-600"
+                            >
+                              <ThumbsUp className="h-3 w-3" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 w-6 p-0 text-gray-400 hover:text-red-600"
+                            >
+                              <ThumbsDown className="h-3 w-3" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Ticket Created Badge */}
+                      {message.ticketId && (
+                        <motion.div
+                          initial={{ opacity: 0, scale: 0.8 }}
+                          animate={{ opacity: 1, scale: 1 }}
+                          className="mt-3 p-2 bg-green-50 border border-green-200 rounded-lg"
+                        >
+                          <div className="flex items-center gap-2 text-sm text-green-800">
+                            <CheckCircle className="h-4 w-4" />
+                            <span>Ticket Created: #{message.ticketId.slice(0, 8)}</span>
+                          </div>
+                        </motion.div>
+                      )}
+
+                      {/* KB Suggestions */}
+                      {message.kbSuggestions && message.kbSuggestions.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="mt-3 space-y-2"
+                        >
+                          <p className="text-xs font-medium text-gray-600 flex items-center gap-1">
+                            <Info className="h-3 w-3" />
+                            Helpful Articles:
+                          </p>
+                          {message.kbSuggestions.slice(0, 2).map((article) => (
+                            <div
+                              key={article.id}
+                              className="p-2 bg-blue-50 border border-blue-200 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors"
+                            >
+                              <div className="flex items-center justify-between">
+                                <p className="text-xs font-medium text-blue-900 line-clamp-2">
+                                  {article.title}
+                                </p>
+                                <ExternalLink className="h-3 w-3 text-blue-600 flex-shrink-0 ml-1" />
+                              </div>
+                            </div>
+                          ))}
+                        </motion.div>
+                      )}
+                    </div>
+
+                    {message.role === "user" && (
+                      <div className="flex-shrink-0">
+                        <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center">
+                          <User className="h-4 w-4 text-white" />
+                        </div>
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
+              {/* Loading indicator */}
+              {isLoading && (
+                <motion.div
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="flex gap-3"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                    <Bot className="h-4 w-4 text-white" />
+                  </div>
+                  <div className="bg-white border border-gray-200 rounded-2xl p-3 shadow-sm">
+                    <div className="flex gap-1">
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
+                      <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }} />
+                    </div>
+                  </div>
+                </motion.div>
               )}
+
+              <div ref={messagesEndRef} />
             </div>
 
-            {message.role === "user" && (
-              <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
-                <User className="w-5 h-5 text-foreground" />
+            {/* Input */}
+            <div className="p-4 bg-white border-t border-gray-200">
+              <div className="flex gap-2">
+                <div className="flex-1 relative">
+                  <Input
+                    ref={inputRef}
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyPress={handleKeyPress}
+                    placeholder="Type your message..."
+                    disabled={isLoading}
+                    className="pr-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  />
+                  <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                    <Sparkles className="h-4 w-4 text-gray-400" />
+                  </div>
+                </div>
+                <Button
+                  onClick={handleSend}
+                  disabled={!input.trim() || isLoading}
+                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                >
+                  <Send className="h-4 w-4" />
+                </Button>
               </div>
-            )}
-          </div>
-        ))}
-
-        {isLoading && (
-          <div className="flex gap-3 justify-start">
-            <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Bot className="w-5 h-5 text-primary animate-pulse" />
+              
+              <div className="flex items-center justify-center mt-2 text-xs text-gray-500">
+                <div className="flex items-center gap-1">
+                  <Zap className="h-3 w-3" />
+                  <span>Powered by AI • Secure & Private</span>
+                </div>
+              </div>
             </div>
-            <Card className="p-3 bg-card">
-              <div className="flex gap-1">
-                <div className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce" />
-                <div className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:0.2s]" />
-                <div className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce [animation-delay:0.4s]" />
-              </div>
-            </Card>
-          </div>
+          </motion.div>
+        ) : (
+          <motion.button
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8 }}
+            onClick={() => setIsMinimized(false)}
+            className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center justify-center group"
+          >
+            <MessageCircle className="h-6 w-6 group-hover:scale-110 transition-transform" />
+            <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+              <span className="text-xs font-bold text-white">!</span>
+            </div>
+          </motion.button>
         )}
-
-        <div ref={messagesEndRef} />
-      </div>
-
-      <div className="border-t border-border p-4">
-        <div className="flex gap-2">
-          <Input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyPress={handleKeyPress}
-            placeholder="Describe your IT issue..."
-            disabled={isLoading}
-            className="flex-1 bg-input"
-          />
-          <Button onClick={handleSend} disabled={!input.trim() || isLoading} size="icon">
-            <Send className="w-4 h-4" />
-          </Button>
-        </div>
-        <p className="text-xs text-muted-foreground mt-2">Press Enter to send • Shift+Enter for new line</p>
-      </div>
+      </AnimatePresence>
     </div>
   )
 }
