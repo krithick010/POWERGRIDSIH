@@ -31,7 +31,7 @@
 }
 
 @layer base {
-  * {
+  :where(input, textarea, select, button, .card, .glass) {
     border-color: hsl(var(--border));
   }
   
