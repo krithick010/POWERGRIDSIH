@@ -6,23 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { 
-  Send, 
-  Bot, 
-  User, 
-  Sparkles, 
-  MessageCircle,
-  Zap,
-  CheckCircle,
-  AlertCircle,
-  Info,
-  ExternalLink,
-  ThumbsUp,
-  ThumbsDown,
-  Copy,
-  Minimize2,
-  Maximize2
-} from "lucide-react"
+import { Send, Bot, User, Sparkles, MessageCircle, Zap, CircleCheck as CheckCircle, CircleAlert as AlertCircle, Info, ExternalLink, ThumbsUp, ThumbsDown, Copy, Minimize2, Maximize2 } from "lucide-react"
 import { api, type KBArticle } from "@/lib/api"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
@@ -46,7 +30,7 @@ export function Chatbot({ employee }: ChatbotProps) {
     {
       id: "1",
       role: "assistant",
-      content: `👋 Hello! I'm ARIA, your AI-powered IT support assistant. I'm here to help you with technical issues, answer questions, and create support tickets when needed. What can I help you with today?`,
+      content: `Hello! I'm ARIA, your AI-powered IT support assistant. I'm here to help you with technical issues, answer questions, and create support tickets when needed. What can I help you with today?`,
       timestamp: new Date(),
     },
   ])
@@ -96,7 +80,7 @@ export function Chatbot({ employee }: ChatbotProps) {
       const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "🚨 Sorry, I encountered an error. Please try again or contact IT support at ext. 2222.",
+        content: "Sorry, I encountered an error. Please try again or contact IT support at ext. 2222.",
         timestamp: new Date(),
       }
       setMessages((prev) => [...prev, errorMessage])
@@ -129,10 +113,10 @@ export function Chatbot({ employee }: ChatbotProps) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.8, y: 20 }}
             transition={{ type: "spring", damping: 25, stiffness: 300 }}
-            className="w-96 h-[600px] bg-white/95 backdrop-blur-xl border border-gray-200/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+            className="w-96 h-[600px] bg-white border border-gray-200 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
           >
             {/* Header */}
-            <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-4 text-white">
+            <div className="bg-gradient-to-r from-blue-600 to-cyan-600 p-4 text-white">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="relative">
@@ -156,7 +140,7 @@ export function Chatbot({ employee }: ChatbotProps) {
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-gray-50/50 to-white/80">
+            <div className="flex-1 overflow-y-auto p-4 space-y-4 bg-gradient-to-b from-slate-50 to-white">
               <AnimatePresence>
                 {messages.map((message) => (
                   <motion.div
@@ -172,16 +156,16 @@ export function Chatbot({ employee }: ChatbotProps) {
                   >
                     {message.role === "assistant" && (
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center shadow-md">
                           <Bot className="h-4 w-4 text-white" />
                         </div>
                       </div>
                     )}
 
                     <div className={cn(
-                      "max-w-[85%] rounded-2xl p-3 shadow-sm",
+                      "max-w-[85%] rounded-2xl p-3.5 shadow-sm",
                       message.role === "user"
-                        ? "bg-gradient-to-r from-blue-600 to-purple-600 text-white ml-auto"
+                        ? "bg-gradient-to-r from-blue-600 to-cyan-600 text-white ml-auto"
                         : "bg-white border border-gray-200"
                     )}>
                       <p className="text-sm leading-relaxed whitespace-pre-wrap">
@@ -268,7 +252,7 @@ export function Chatbot({ employee }: ChatbotProps) {
 
                     {message.role === "user" && (
                       <div className="flex-shrink-0">
-                        <div className="w-8 h-8 bg-gradient-to-br from-gray-400 to-gray-600 rounded-full flex items-center justify-center">
+                        <div className="w-8 h-8 bg-gradient-to-br from-slate-500 to-slate-700 rounded-full flex items-center justify-center shadow-md">
                           <User className="h-4 w-4 text-white" />
                         </div>
                       </div>
@@ -284,10 +268,10 @@ export function Chatbot({ employee }: ChatbotProps) {
                   animate={{ opacity: 1, y: 0 }}
                   className="flex gap-3"
                 >
-                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-cyan-500 rounded-full flex items-center justify-center shadow-md">
                     <Bot className="h-4 w-4 text-white" />
                   </div>
-                  <div className="bg-white border border-gray-200 rounded-2xl p-3 shadow-sm">
+                  <div className="bg-white border border-gray-200 rounded-2xl p-3.5 shadow-sm">
                     <div className="flex gap-1">
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" />
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }} />
@@ -311,7 +295,7 @@ export function Chatbot({ employee }: ChatbotProps) {
                     onKeyPress={handleKeyPress}
                     placeholder="Type your message..."
                     disabled={isLoading}
-                    className="pr-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    className="pr-12 h-11 border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                   />
                   <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
                     <Sparkles className="h-4 w-4 text-gray-400" />
@@ -320,7 +304,7 @@ export function Chatbot({ employee }: ChatbotProps) {
                 <Button
                   onClick={handleSend}
                   disabled={!input.trim() || isLoading}
-                  className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all duration-200"
+                  className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-md hover:shadow-lg transition-all duration-200 h-11 px-5"
                 >
                   <Send className="h-4 w-4" />
                 </Button>
@@ -340,7 +324,7 @@ export function Chatbot({ employee }: ChatbotProps) {
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.8 }}
             onClick={() => setIsMinimized(false)}
-            className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center justify-center group"
+            className="w-16 h-16 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-full shadow-2xl hover:shadow-3xl transition-all duration-300 flex items-center justify-center group"
           >
             <MessageCircle className="h-6 w-6 group-hover:scale-110 transition-transform" />
             <div className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">

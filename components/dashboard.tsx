@@ -89,32 +89,32 @@ export function Dashboard({ employee }: DashboardProps) {
   })
 
   return (
-    <div className="min-h-screen bg-background p-6">
-      <div className="container-safe max-w-7xl space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-cyan-50 p-6">
+      <div className="container-safe max-w-7xl space-y-6">
         
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="flex items-center justify-between"
+          className="flex items-center justify-between flex-wrap gap-4"
         >
           <div>
-            <h1 className="text-4xl font-bold text-gradient">
+            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-600 to-cyan-600 bg-clip-text text-transparent">
               POWERGRID IT Support
             </h1>
-            <p className="text-muted-foreground mt-2">Welcome back, {employee}</p>
+            <p className="text-muted-foreground mt-2 font-medium">Welcome back, <span className="text-foreground">{employee}</span></p>
           </div>
-          
+
           <div className="flex items-center gap-3">
             <Button
               onClick={fetchTickets}
               variant="outline"
-              className="interactive"
+              className="hover:bg-primary/5 hover:border-primary/50 transition-all"
             >
               <RefreshCw className={cn("h-4 w-4 mr-2", loading && "animate-spin")} />
               Refresh
             </Button>
-            <Button className="gradient-primary text-primary-foreground interactive">
+            <Button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white shadow-md hover:shadow-lg transition-all">
               <Plus className="h-4 w-4 mr-2" />
               New Ticket
             </Button>
@@ -122,36 +122,39 @@ export function Dashboard({ employee }: DashboardProps) {
         </motion.div>
 
         {/* Stats Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5">
           {[
-            { title: "Total Tickets", value: stats.total, icon: Ticket, gradient: "from-blue-500 to-blue-600", change: "+12%" },
-            { title: "Open", value: stats.open, icon: AlertCircle, gradient: "from-red-500 to-red-600", change: "+3%" },
-            { title: "In Progress", value: stats.inProgress, icon: Clock, gradient: "from-orange-500 to-orange-600", change: "+8%" },
-            { title: "Resolved", value: stats.resolved, icon: CheckCircle2, gradient: "from-green-500 to-green-600", change: "+15%" },
+            { title: "Total Tickets", value: stats.total, icon: Ticket, color: "blue", bgColor: "bg-blue-500", change: "+12%" },
+            { title: "Open", value: stats.open, icon: AlertCircle, color: "red", bgColor: "bg-red-500", change: "+3%" },
+            { title: "In Progress", value: stats.inProgress, icon: Clock, color: "amber", bgColor: "bg-amber-500", change: "+8%" },
+            { title: "Resolved", value: stats.resolved, icon: CheckCircle2, color: "emerald", bgColor: "bg-emerald-500", change: "+15%" },
           ].map((stat, index) => (
             <motion.div
               key={stat.title}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
+              transition={{ delay: index * 0.08 }}
             >
-              <Card className="relative overflow-hidden border-border/50 shadow-elevated hover:shadow-glow-primary transition-all duration-300 glass interactive">
+              <Card className="relative overflow-hidden border-border/50 shadow-md hover:shadow-xl transition-all duration-300 bg-white/90 backdrop-blur-sm group cursor-pointer">
                 <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">{stat.title}</p>
-                      <p className="text-3xl font-bold">{stat.value}</p>
-                      <p className="text-sm text-green-600 flex items-center mt-1">
-                        <TrendingUp className="h-3 w-3 mr-1" />
-                        {stat.change}
-                      </p>
+                  <div className="flex items-start justify-between">
+                    <div className="space-y-2">
+                      <p className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">{stat.title}</p>
+                      <p className="text-4xl font-bold text-foreground">{stat.value}</p>
+                      <div className="flex items-center gap-1">
+                        <div className="flex items-center text-emerald-600 text-sm font-semibold">
+                          <TrendingUp className="h-3.5 w-3.5 mr-1" />
+                          {stat.change}
+                        </div>
+                        <span className="text-xs text-muted-foreground">vs last week</span>
+                      </div>
                     </div>
-                    <div className={cn("p-3 rounded-full bg-gradient-to-r", stat.gradient)}>
+                    <div className={cn("p-3 rounded-xl group-hover:scale-110 transition-transform shadow-lg", stat.bgColor)}>
                       <stat.icon className="h-6 w-6 text-white" />
                     </div>
                   </div>
                 </CardContent>
-                <div className={cn("absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r", stat.gradient)} />
+                <div className={cn("absolute bottom-0 left-0 right-0 h-1", stat.bgColor)} />
               </Card>
             </motion.div>
           ))}
@@ -161,16 +164,16 @@ export function Dashboard({ employee }: DashboardProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.4 }}
+          transition={{ delay: 0.3 }}
         >
-          <Card className="border-border/50 shadow-lg glass">
-            <CardContent className="p-6">
+          <Card className="border-border/50 shadow-md bg-white/90 backdrop-blur-sm">
+            <CardContent className="p-5">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                   <Input
                     placeholder="Search tickets..."
-                    className="pl-10 interactive-subtle"
+                    className="pl-10 h-11 border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                     value={filters.search}
                     onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
                   />
@@ -179,7 +182,7 @@ export function Dashboard({ employee }: DashboardProps) {
                   value={filters.status}
                   onValueChange={(value) => setFilters(prev => ({ ...prev, status: value }))}
                 >
-                  <SelectTrigger className="w-full md:w-[180px]">
+                  <SelectTrigger className="w-full md:w-[180px] h-11">
                     <SelectValue placeholder="All Statuses" />
                   </SelectTrigger>
                   <SelectContent>
@@ -193,7 +196,7 @@ export function Dashboard({ employee }: DashboardProps) {
                   value={filters.category}
                   onValueChange={(value) => setFilters(prev => ({ ...prev, category: value }))}
                 >
-                  <SelectTrigger className="w-full md:w-[180px]">
+                  <SelectTrigger className="w-full md:w-[180px] h-11">
                     <SelectValue placeholder="All Categories" />
                   </SelectTrigger>
                   <SelectContent>
@@ -214,9 +217,9 @@ export function Dashboard({ employee }: DashboardProps) {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.4 }}
         >
-          <Card className="border-border/50 shadow-lg glass">
+          <Card className="border-border/50 shadow-md bg-white/90 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Ticket className="h-5 w-5" />
@@ -249,8 +252,8 @@ export function Dashboard({ employee }: DashboardProps) {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20 }}
-                        transition={{ delay: index * 0.05 }}
-                        className="p-6 border-b border-border last:border-b-0 interactive-subtle cursor-pointer"
+                        transition={{ delay: index * 0.04 }}
+                        className="p-5 border-b border-border last:border-b-0 hover:bg-slate-50/50 transition-colors cursor-pointer"
                       >
                         <div className="flex items-center justify-between">
                           <div className="flex-1">
@@ -275,7 +278,7 @@ export function Dashboard({ employee }: DashboardProps) {
                             </div>
                           </div>
                           <div className="ml-4">
-                            <Button variant="ghost" size="sm" className="interactive">
+                            <Button variant="ghost" size="sm" className="hover:bg-primary/10 hover:text-primary transition-colors">
                               View Details
                             </Button>
                           </div>
