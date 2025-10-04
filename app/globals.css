@@ -2,32 +2,32 @@
 @import "tailwindcss/utilities";
 
 :root {
-  /* Dark enterprise theme for POWERGRID ticketing system */
-  --background: 220 13% 9%;
-  --foreground: 220 9% 95%;
-  --card: 220 13% 11%;
-  --card-foreground: 220 9% 95%;
-  --popover: 220 13% 11%;
-  --popover-foreground: 220 9% 95%;
-  --primary: 265 89% 65%;
-  --primary-foreground: 220 9% 95%;
-  --secondary: 220 13% 15%;
-  --secondary-foreground: 220 9% 95%;
-  --muted: 220 13% 15%;
-  --muted-foreground: 220 9% 65%;
-  --accent: 265 89% 65%;
-  --accent-foreground: 220 9% 95%;
-  --destructive: 0 63% 31%;
-  --destructive-foreground: 220 9% 95%;
-  --border: 220 13% 18%;
-  --input: 220 13% 15%;
-  --ring: 265 89% 65%;
-  --chart-1: 265 89% 65%;
-  --chart-2: 200 89% 60%;
-  --chart-3: 150 89% 70%;
-  --chart-4: 300 89% 68%;
-  --chart-5: 80 89% 72%;
-  --radius: 0.5rem;
+  /* Modern professional theme */
+  --background: 210 20% 98%;
+  --foreground: 215 25% 15%;
+  --card: 0 0% 100%;
+  --card-foreground: 215 25% 15%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 215 25% 15%;
+  --primary: 212 95% 52%;
+  --primary-foreground: 0 0% 100%;
+  --secondary: 210 20% 96%;
+  --secondary-foreground: 215 25% 15%;
+  --muted: 210 20% 94%;
+  --muted-foreground: 215 16% 47%;
+  --accent: 177 70% 41%;
+  --accent-foreground: 0 0% 100%;
+  --destructive: 0 84% 60%;
+  --destructive-foreground: 0 0% 100%;
+  --border: 210 20% 88%;
+  --input: 210 20% 96%;
+  --ring: 212 95% 52%;
+  --chart-1: 212 95% 52%;
+  --chart-2: 177 70% 41%;
+  --chart-3: 142 76% 36%;
+  --chart-4: 24 95% 53%;
+  --chart-5: 271 81% 56%;
+  --radius: 0.75rem;
 }
 
 @layer base {
