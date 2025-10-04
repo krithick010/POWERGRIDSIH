@@ -243,21 +243,47 @@ POWERGRID IT Support Team
             getattr(settings, 'ENVIRONMENT', 'development') == 'development'):
             return settings.TEST_NOTIFICATION_EMAIL
 
-        # For production or when test override not set, use actual user email
-        # If employee string contains an email, use it directly
-        if '@' in employee:
-            return employee
+        # Frontend now sends format: "email@gmail.com (+919876543210)"
+        # Extract email part (everything before the first parenthesis or the whole string)
+        if '(' in employee:
+            email_part = employee.split('(')[0].strip()
+        else:
+            email_part = employee.strip()
+        
+        # If it contains an email, use it directly
+        if '@' in email_part:
+            return email_part
 
         # If employee is just a name, assume it's their Gmail address
         # In production, this would query the employee database
-        name = employee.split('(')[0].strip()
-        email_name = name.lower().replace(' ', '.')
-        return f"{email_name}@gmail.com"
+        name = email_part.lower().replace(' ', '.')
+        return f"{name}@gmail.com"
     
     def _extract_phone(self, employee: str) -> Optional[str]:
         """Extract phone number from employee string"""
-        # In production, this would query the employee database
-        # For demo, return None (SMS won't be sent)
+        # Frontend now sends format: "email@gmail.com (+919876543210)" or "email@gmail.com (9876543210)"
+        
+        # Look for phone number in format "email (phone)"
+        if '(' in employee and ')' in employee:
+            phone_part = employee.split('(')[1].split(')')[0].strip()
+            # Clean up the phone number (remove spaces, dashes)
+            clean_phone = phone_part.replace(' ', '').replace('-', '')
+            
+            # Ensure it starts with + for international format
+            if clean_phone.isdigit() and len(clean_phone) >= 10:
+                # If no country code, assume India (+91) for numbers starting with 9,8,7,6
+                if clean_phone.startswith(('9', '8', '7', '6')) and len(clean_phone) == 10:
+                    return f"+91{clean_phone}"
+                elif len(clean_phone) >= 10:
+                    return f"+{clean_phone}"
+            elif clean_phone.startswith('+') and clean_phone[1:].isdigit():
+                return clean_phone
+        
+        # Fallback for testing with verified numbers
+        test_emails = ["sashreekbala864@gmail.com", "krithickrobotics7@gmail.com"]
+        if any(email in employee for email in test_emails):
+            return "+918825686207"  # Your verified Twilio signup number
+        
         return None
 
 # Global notification service instance

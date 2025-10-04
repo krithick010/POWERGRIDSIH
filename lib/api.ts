@@ -90,4 +90,18 @@ export const api = {
 
     return response.json()
   },
+
+  async updateTicketStatus(ticketId: string, status: "open" | "in_progress" | "resolved"): Promise<Ticket> {
+    const response = await fetch(`${API_URL}/tickets/${ticketId}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status }),
+    })
+
+    if (!response.ok) {
+      throw new Error("Failed to update ticket status")
+    }
+
+    return response.json()
+  },
 }

@@ -4,8 +4,9 @@ import { useState, useEffect } from "react"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
+import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, Clock, CheckCircle2, AlertCircle } from "lucide-react"
+import { Search, Clock, CheckCircle2, AlertCircle, Check } from "lucide-react"
 import { api, type Ticket } from "@/lib/api"
 
 interface TicketDashboardProps {
@@ -18,6 +19,7 @@ export function TicketDashboard({ employee }: TicketDashboardProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [statusFilter, setStatusFilter] = useState<string>("all")
   const [categoryFilter, setCategoryFilter] = useState<string>("all")
+  const [resolvingTickets, setResolvingTickets] = useState<Set<string>>(new Set())
 
   useEffect(() => {
     loadTickets()
@@ -82,6 +84,24 @@ export function TicketDashboard({ employee }: TicketDashboardProps) {
     }).format(date)
   }
 
+  const handleResolveTicket = async (ticketId: string) => {
+    setResolvingTickets(prev => new Set([...prev, ticketId]))
+    try {
+      await api.updateTicketStatus(ticketId, "resolved")
+      // Refresh tickets to show updated status
+      await loadTickets()
+    } catch (error) {
+      console.error("Failed to resolve ticket:", error)
+      // You could add a toast notification here if you have one set up
+    } finally {
+      setResolvingTickets(prev => {
+        const newSet = new Set(prev)
+        newSet.delete(ticketId)
+        return newSet
+      })
+    }
+  }
+
   return (
     <div className="flex flex-col h-full">
       <div className="p-4 border-b border-border space-y-4">
@@ -138,7 +158,7 @@ export function TicketDashboard({ employee }: TicketDashboardProps) {
           </div>
         ) : (
           filteredTickets.map((ticket) => (
-            <Card key={ticket.id} className="p-4 hover:bg-secondary/50 transition-colors cursor-pointer">
+            <Card key={ticket.id} className="p-4 hover:bg-secondary/50 transition-colors">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-2">
@@ -148,11 +168,33 @@ export function TicketDashboard({ employee }: TicketDashboardProps) {
 
                   <p className="text-sm text-muted-foreground line-clamp-2 mb-3">{ticket.description}</p>
 
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2 mb-3">
                     <Badge className={getPriorityColor(ticket.priority)}>{ticket.priority}</Badge>
                     <Badge variant="outline">{ticket.category}</Badge>
                     <Badge variant="secondary">{ticket.status.replace("_", " ")}</Badge>
                   </div>
+
+                  {ticket.status !== "resolved" && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleResolveTicket(ticket.id)
+                      }}
+                      disabled={resolvingTickets.has(ticket.id)}
+                      className="text-xs"
+                    >
+                      {resolvingTickets.has(ticket.id) ? (
+                        "Resolving..."
+                      ) : (
+                        <>
+                          <Check className="w-3 h-3 mr-1" />
+                          Mark as Resolved
+                        </>
+                      )}
+                    </Button>
+                  )}
                 </div>
 
                 <div className="text-right flex-shrink-0">

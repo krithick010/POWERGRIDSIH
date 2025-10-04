@@ -6,28 +6,36 @@ import { Chatbot } from "@/components/chatbot"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { User, Sparkles, Zap, ArrowRight, Shield, Cpu, Headphones } from "lucide-react"
+import { User, Phone, Sparkles, Zap, ArrowRight, Shield, Cpu, Headphones } from "lucide-react"
 import { motion, AnimatePresence } from "framer-motion"
 
 export default function Home() {
   const [employee, setEmployee] = useState("")
+  const [phoneNumber, setPhoneNumber] = useState("")
   const [showDashboard, setShowDashboard] = useState(false)
 
   const isValidEmail = (email: string) => {
     return email.includes('@') && email.includes('.') && email.trim().length > 5
   }
 
+  const isValidPhone = (phone: string) => {
+    // Accept formats like +919876543210, +1234567890, or 9876543210
+    const phoneRegex = /^\+?[1-9]\d{1,14}$/
+    return phoneRegex.test(phone.replace(/[\s-]/g, '')) && phone.trim().length >= 10
+  }
+
   const handleLogin = () => {
-    if (employee.trim() && isValidEmail(employee)) {
+    if (employee.trim() && isValidEmail(employee) && phoneNumber.trim() && isValidPhone(phoneNumber)) {
       setShowDashboard(true)
     }
   }
 
   if (showDashboard) {
+    const userInfo = `${employee} (${phoneNumber})`
     return (
       <>
-        <Dashboard employee={employee} />
-        <Chatbot employee={employee} />
+        <Dashboard employee={userInfo} />
+        <Chatbot employee={userInfo} />
       </>
     )
   }
@@ -130,9 +138,27 @@ export default function Home() {
                   )}
                 </div>
 
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Phone Number (for SMS notifications)</label>
+                  <div className="relative group">
+                    <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                    <Input
+                      type="tel"
+                      placeholder="+919876543210 or 9876543210"
+                      value={phoneNumber}
+                      onChange={(e) => setPhoneNumber(e.target.value)}
+                      onKeyPress={(e) => e.key === "Enter" && handleLogin()}
+                      className="pl-10 h-12 border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                    />
+                  </div>
+                  {phoneNumber && !isValidPhone(phoneNumber) && (
+                    <p className="text-xs text-amber-600">Please enter a valid phone number (e.g., +919876543210)</p>
+                  )}
+                </div>
+
                 <Button
                   onClick={handleLogin}
-                  disabled={!employee.trim() || !isValidEmail(employee)}
+                  disabled={!employee.trim() || !isValidEmail(employee) || !phoneNumber.trim() || !isValidPhone(phoneNumber)}
                   className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold h-12 shadow-lg hover:shadow-xl transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span>Access Dashboard</span>
