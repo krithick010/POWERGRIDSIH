@@ -6,18 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { 
-  Ticket, 
-  TrendingUp, 
-  Clock, 
-  CheckCircle2, 
-  AlertCircle,
-  Search,
-  RefreshCw,
-  Plus,
-  Users,
-  Zap
-} from "lucide-react"
+import { Ticket, TrendingUp, Clock, CircleCheck as CheckCircle2, CircleAlert as AlertCircle, Search, RefreshCw, Plus, Users, Zap } from "lucide-react"
 import { api, type Ticket as TicketType } from "@/lib/api"
 import { motion, AnimatePresence } from "framer-motion"
 import { cn } from "@/lib/utils"
