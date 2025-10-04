@@ -9,7 +9,6 @@ import aiosmtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from twilio.rest import Client as TwilioClient
-
 from config import settings
 
 logger = logging.getLogger(__name__)
@@ -22,7 +21,7 @@ class EmailService:
         if not self.enabled:
             logger.warning("Email service disabled - SMTP credentials not configured")
     
-    async def send_email(
+    async def send_email( 
         self,
         to_email: str,
         subject: str,
@@ -113,7 +112,8 @@ class NotificationService:
         subject: str,
         priority: str,
         category: str,
-        assigned_team: str
+        assigned_team: str,
+        from_email: Optional[str] = None
     ):
         """Send notification when ticket is created"""
         # Extract email from employee string (format: "Name (ID)")
@@ -141,31 +141,40 @@ POWERGRID IT Support Team
         """
         
         html_body = f"""
-<html>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-    <h2 style="color: #6366f1;">Ticket Created Successfully</h2>
-    <p>Hello,</p>
-    <p>Your IT support ticket has been created successfully.</p>
-    
-    <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-        <p style="margin: 5px 0;"><strong>Ticket ID:</strong> {ticket_id}</p>
-        <p style="margin: 5px 0;"><strong>Subject:</strong> {subject}</p>
-        <p style="margin: 5px 0;"><strong>Priority:</strong> <span style="color: {'#ef4444' if priority == 'high' else '#f59e0b' if priority == 'medium' else '#10b981'};">{priority.upper()}</span></p>
-        <p style="margin: 5px 0;"><strong>Category:</strong> {category.title()}</p>
-        <p style="margin: 5px 0;"><strong>Assigned Team:</strong> {assigned_team}</p>
-    </div>
-    
-    <p>You will receive updates as your ticket progresses.</p>
-    <p>To view your ticket status, please visit the IT Support Portal.</p>
-    
-    <p style="margin-top: 30px;">Thank you,<br>POWERGRID IT Support Team</p>
-</body>
-</html>
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <h2 style="color: #6366f1;">Ticket Created Successfully</h2>
+            <p>Hello,</p>
+            <p>Your IT support ticket has been created successfully.</p>
+            
+            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <p style="margin: 5px 0;"><strong>Ticket ID:</strong> {ticket_id}</p>
+                <p style="margin: 5px 0;"><strong>Subject:</strong> {subject}</p>
+                <p style="margin: 5px 0;"><strong>Priority:</strong> <span style="color: {'#ef4444' if priority == 'high' else '#f59e0b' if priority == 'medium' else '#10b981'};">{priority.upper()}</span></p>
+                <p style="margin: 5px 0;"><strong>Category:</strong> {category.title()}</p>
+                <p style="margin: 5px 0;"><strong>Assigned Team:</strong> {assigned_team}</p>
+            </div>
+            
+            <p>You will receive updates as your ticket progresses.</p>
+            <p>To view your ticket status, please visit the IT Support Portal.</p>
+            
+            <p style="margin-top: 30px;">Thank you,<br>POWERGRID IT Support Team</p>
+        </body>
+        </html>
         """
-        
-        await self.email_service.send_email(email, email_subject, email_body, html_body)
-        
-        logger.info(f"Ticket creation notification sent for {ticket_id}")
+        # If a specific From address is provided (e.g., chatbot), use it
+        if from_email:
+            # Temporarily override the SMTP_FROM for this message
+            original_from = settings.SMTP_FROM
+            settings.SMTP_FROM = from_email
+
+        try:
+            await self.email_service.send_email(email, email_subject, email_body, html_body)
+            logger.info(f"Ticket creation notification sent for {ticket_id}")
+        finally:
+            if from_email:
+                # Restore original
+                settings.SMTP_FROM = original_from
     
     async def notify_ticket_updated(
         self,
@@ -196,48 +205,52 @@ POWERGRID IT Support Team
         """
         
         html_body = f"""
-<html>
-<body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
-    <h2 style="color: #6366f1;">Ticket Status Updated</h2>
-    <p>Hello,</p>
-    <p>Your IT support ticket status has been updated.</p>
-    
-    <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
-        <p style="margin: 5px 0;"><strong>Ticket ID:</strong> {ticket_id}</p>
-        <p style="margin: 5px 0;"><strong>Subject:</strong> {subject}</p>
-        <p style="margin: 5px 0;"><strong>Previous Status:</strong> {old_status.replace('_', ' ').title()}</p>
-        <p style="margin: 5px 0;"><strong>New Status:</strong> <span style="color: #10b981;">{new_status.replace('_', ' ').title()}</span></p>
-    </div>
-    
-    <p>To view your ticket details, please visit the IT Support Portal.</p>
-    
-    <p style="margin-top: 30px;">Thank you,<br>POWERGRID IT Support Team</p>
-</body>
-</html>
+        <html>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
+            <h2 style="color: #6366f1;">Ticket Status Updated</h2>
+            <p>Hello,</p>
+            <p>Your IT support ticket status has been updated.</p>
+            
+            <div style="background-color: #f5f5f5; padding: 15px; border-radius: 5px; margin: 20px 0;">
+                <p style="margin: 5px 0;"><strong>Ticket ID:</strong> {ticket_id}</p>
+                <p style="margin: 5px 0;"><strong>Subject:</strong> {subject}</p>
+                <p style="margin: 5px 0;"><strong>Previous Status:</strong> {old_status.replace('_', ' ').title()}</p>
+                <p style="margin: 5px 0;"><strong>New Status:</strong> <span style="color: #10b981;">{new_status.replace('_', ' ').title()}</span></p>
+            </div>
+            
+            <p>To view your ticket details, please visit the IT Support Portal.</p>
+            
+            <p style="margin-top: 30px;">Thank you,<br>POWERGRID IT Support Team</p>
+        </body>
+        </html>
         """
-        
+
         await self.email_service.send_email(email, email_subject, email_body, html_body)
-        
+
         # Send SMS for resolved tickets
         if new_status == 'resolved':
             phone = self._extract_phone(employee)
             if phone:
                 sms_message = f"POWERGRID IT: Your ticket #{ticket_id[:8]} has been resolved. Thank you!"
                 await self.sms_service.send_sms(phone, sms_message)
-        
+
         logger.info(f"Ticket update notification sent for {ticket_id}")
     
     def _extract_email(self, employee: str) -> str:
         """Extract email from employee string or generate default"""
+        # If a test override is configured, always send to that address
+        if getattr(settings, 'TEST_NOTIFICATION_EMAIL', None):
+            return settings.TEST_NOTIFICATION_EMAIL
+
         # For demo purposes, generate email from employee name
         # In production, this would query the employee database
         if '@' in employee:
             return employee
-        
+
         # Extract name and generate email
         name = employee.split('(')[0].strip()
         email_name = name.lower().replace(' ', '.')
-        return f"{email_name}@powergrid.in"
+        return f"{email_name}@gmail.com"
     
     def _extract_phone(self, employee: str) -> Optional[str]:
         """Extract phone number from employee string"""

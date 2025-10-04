@@ -17,6 +17,7 @@ from models import TicketModel, KnowledgeBaseModel
 from ai_classifier import get_classifier
 from semantic_search import get_search_engine
 from notifications import get_notification_service
+from config import settings
 from automation import get_automation_engine
 from intent_classifier import AdvancedIntentClassifier
 from conversation_manager import ConversationManager
@@ -176,6 +177,8 @@ async def create_ticket(ticket: TicketCreate, background_tasks: BackgroundTasks)
         )
         
         notification_service = get_notification_service()
+        # If created from chatbot, optionally use a chatbot-specific From address
+        from_addr = settings.CHATBOT_FROM if ticket.source == 'chatbot' and settings.CHATBOT_FROM else None
         background_tasks.add_task(
             notification_service.notify_ticket_created,
             ticket_id=str(new_ticket['id']),
@@ -183,7 +186,8 @@ async def create_ticket(ticket: TicketCreate, background_tasks: BackgroundTasks)
             subject=new_ticket['subject'],
             priority=new_ticket['priority'],
             category=new_ticket['category'],
-            assigned_team=new_ticket['assigned_team']
+            assigned_team=new_ticket['assigned_team'],
+            from_email=from_addr
         )
         
         return new_ticket

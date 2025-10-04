@@ -17,6 +17,8 @@ class Settings:
     SMTP_USER: Optional[str] = os.getenv('SMTP_USER')
     SMTP_PASSWORD: Optional[str] = os.getenv('SMTP_PASSWORD')
     SMTP_FROM: str = os.getenv('SMTP_FROM', 'noreply@powergrid.in')
+    # Optional: sender address specifically used for chatbot-created tickets
+    CHATBOT_FROM: Optional[str] = os.getenv('CHATBOT_FROM')
     
     # SMS (Twilio)
     TWILIO_ACCOUNT_SID: Optional[str] = os.getenv('TWILIO_ACCOUNT_SID')
@@ -44,5 +46,10 @@ class Settings:
     @property
     def sms_enabled(self) -> bool:
         return bool(self.TWILIO_ACCOUNT_SID and self.TWILIO_AUTH_TOKEN)
+
+    # For demo/testing: override recipient for all outgoing emails
+    # If set, notifications will be sent to this address instead of fabricating
+    # per-employee emails. Useful during development to avoid spamming users.
+    TEST_NOTIFICATION_EMAIL: Optional[str] = os.getenv('TEST_NOTIFICATION_EMAIL')
 
 settings = Settings()
