@@ -18,7 +18,7 @@ class Settings:
     SMTP_PASSWORD: Optional[str] = os.getenv('SMTP_PASSWORD')
     SMTP_FROM: str = os.getenv('SMTP_FROM', 'noreply@powergrid.in')
     # Optional: sender address specifically used for chatbot-created tickets
-    CHATBOT_FROM: Optional[str] = os.getenv('CHATBOT_FROM')
+    CHATBOT_FROM: Optional[str] = os.getenv('CHATBOT_FROM', 'krithickrobotics7@gmail.com')
     
     # SMS (Twilio)
     TWILIO_ACCOUNT_SID: Optional[str] = os.getenv('TWILIO_ACCOUNT_SID')

@@ -13,8 +13,12 @@ export default function Home() {
   const [employee, setEmployee] = useState("")
   const [showDashboard, setShowDashboard] = useState(false)
 
+  const isValidEmail = (email: string) => {
+    return email.includes('@') && email.includes('.') && email.trim().length > 5
+  }
+
   const handleLogin = () => {
-    if (employee.trim()) {
+    if (employee.trim() && isValidEmail(employee)) {
       setShowDashboard(true)
     }
   }
@@ -103,16 +107,17 @@ export default function Home() {
               <CardHeader className="space-y-2 pb-6">
                 <CardTitle className="text-2xl font-bold">Welcome Back</CardTitle>
                 <CardDescription className="text-base">
-                  Enter your employee ID to access your dashboard
+                  Sign in with your Gmail address to access IT support
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-foreground">Employee ID</label>
+                  <label className="text-sm font-medium text-foreground">Gmail Address</label>
                   <div className="relative group">
                     <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <Input
-                      placeholder="e.g., EMP12345"
+                      type="email"
+                      placeholder="username@gmail.com"
                       value={employee}
                       onChange={(e) => setEmployee(e.target.value)}
                       onKeyPress={(e) => e.key === "Enter" && handleLogin()}
@@ -120,12 +125,15 @@ export default function Home() {
                       autoFocus
                     />
                   </div>
+                  {employee && !employee.includes('@') && (
+                    <p className="text-xs text-amber-600">Please enter a valid email address (e.g., username@gmail.com)</p>
+                  )}
                 </div>
 
                 <Button
                   onClick={handleLogin}
-                  disabled={!employee.trim()}
-                  className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold h-12 shadow-lg hover:shadow-xl transition-all duration-200 group"
+                  disabled={!employee.trim() || !isValidEmail(employee)}
+                  className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white font-semibold h-12 shadow-lg hover:shadow-xl transition-all duration-200 group disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <span>Access Dashboard</span>
                   <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />

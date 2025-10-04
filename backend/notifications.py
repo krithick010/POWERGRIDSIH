@@ -238,16 +238,18 @@ POWERGRID IT Support Team
     
     def _extract_email(self, employee: str) -> str:
         """Extract email from employee string or generate default"""
-        # If a test override is configured, always send to that address
-        if getattr(settings, 'TEST_NOTIFICATION_EMAIL', None):
+        # If TEST_NOTIFICATION_EMAIL is set AND we're in development, use test address
+        if (getattr(settings, 'TEST_NOTIFICATION_EMAIL', None) and 
+            getattr(settings, 'ENVIRONMENT', 'development') == 'development'):
             return settings.TEST_NOTIFICATION_EMAIL
 
-        # For demo purposes, generate email from employee name
-        # In production, this would query the employee database
+        # For production or when test override not set, use actual user email
+        # If employee string contains an email, use it directly
         if '@' in employee:
             return employee
 
-        # Extract name and generate email
+        # If employee is just a name, assume it's their Gmail address
+        # In production, this would query the employee database
         name = employee.split('(')[0].strip()
         email_name = name.lower().replace(' ', '.')
         return f"{email_name}@gmail.com"
