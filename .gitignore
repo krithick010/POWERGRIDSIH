@@ -5,6 +5,10 @@ backend/*.pyc
 backend/.pytest_cache/
 backend/venv/
 backend/env/
+backend/.venv/
+.venv/
+venv/
+env/
 
 # Next.js
 .next/
