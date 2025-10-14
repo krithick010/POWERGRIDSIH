@@ -1,0 +1,144 @@
+╔══════════════════════════════════════════════════════════════╗
+║                  RENDER.COM QUICK REFERENCE                  ║
+╚══════════════════════════════════════════════════════════════╝
+
+📋 SERVICE CONFIGURATION:
+
+Name:                 powergrid-backend
+Region:               Oregon (US West)
+Branch:               main
+Runtime:              Python 3
+Root Directory:       backend
+
+Build Command:
+  pip install -r requirements.txt
+
+Start Command:
+  uvicorn main:app --host 0.0.0.0 --port $PORT
+
+Health Check Path:    /health
+Auto-Deploy:          Yes
+
+
+🔧 ENVIRONMENT VARIABLES:
+
+Copy-paste these exact names:
+
+DATABASE_URL=postgresql://user:pass@host:5432/powergrid_tickets
+DB_HOST=<your-db-host>
+DB_PORT=5432
+DB_NAME=powergrid_tickets
+DB_USER=<your-db-user>
+DB_PASSWORD=<your-db-password>
+
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=krithickrobotics7@gmail.com
+SMTP_PASSWORD=<your-gmail-app-password>
+CHATBOT_FROM=krithickrobotics7@gmail.com
+
+TWILIO_ACCOUNT_SID=<your-twilio-sid>
+TWILIO_AUTH_TOKEN=<your-twilio-token>
+TWILIO_PHONE_NUMBER=+15855802717
+
+ENVIRONMENT=production
+PYTHON_VERSION=3.12.2
+
+
+📊 EXPECTED LOGS (Success):
+
+✅ INFO: Application startup complete.
+✅ INFO: Uvicorn running on http://0.0.0.0:10000
+✅ INFO: Database pool initialized!
+✅ INFO: AI models loaded!
+
+
+🧪 TEST ENDPOINTS:
+
+Health Check:
+https://your-backend.onrender.com/health
+
+API Documentation:
+https://your-backend.onrender.com/docs
+
+
+⏱️  DEPLOYMENT TIME:
+
+First deploy:  10-15 minutes (downloads AI models ~1.5GB)
+Later deploys: 3-5 minutes
+Free tier:     Sleeps after 15 min inactivity
+
+
+💡 IMPORTANT NOTES:
+
+1. Use $PORT variable (Render sets it automatically)
+2. Don't use :8000 or hardcoded ports
+3. Internal Database URL is faster than External
+4. AI models download on first start (be patient!)
+5. Free tier has 750 hours/month (enough for 24/7)
+
+
+🗄️  DATABASE SETUP:
+
+Option 1 (Recommended): Create PostgreSQL in Render
+  • Name: powergrid-db
+  • Region: Same as backend (Oregon)
+  • Plan: Free
+  • Copy "Internal Database URL"
+  • Use as DATABASE_URL
+
+Option 2: External database
+  • Must be publicly accessible
+  • Update connection string accordingly
+
+
+🚨 COMMON ERRORS & FIXES:
+
+❌ "Port already in use"
+   Fix: Use $PORT, not 8000
+
+❌ "Database connection failed"
+   Fix: Use Internal URL, check credentials
+
+❌ "Module not found"
+   Fix: Clear build cache, redeploy
+
+❌ "Models failed to load"
+   Wait: Models downloading (first deploy only)
+
+
+✅ SUCCESS INDICATORS:
+
+• Service status shows "Live" (green)
+• Logs show "Application startup complete"
+• Health endpoint returns 200 OK
+• /docs page loads
+• No red errors in logs
+
+
+🔗 AFTER DEPLOYMENT:
+
+1. Copy your Render URL:
+   https://powergrid-backend-XXXX.onrender.com
+
+2. Update Netlify:
+   Site Settings → Environment Variables
+   Add: NEXT_PUBLIC_API_URL = <your-render-url>
+
+3. Trigger Netlify redeploy
+
+4. Test complete flow!
+
+
+📞 SUPPORT:
+
+Render Docs:       https://render.com/docs
+Community Forum:   https://community.render.com
+Status Page:       https://status.render.com
+
+Application Help:  Check RENDER_DEPLOYMENT.md
+
+
+╔══════════════════════════════════════════════════════════════╗
+║  Keep this file open while deploying to Render.com! 📋      ║
+╚══════════════════════════════════════════════════════════════╝

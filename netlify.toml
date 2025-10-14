@@ -40,5 +40,5 @@
 
 [build.environment]
   # Next.js environment variables
-  NEXT_PUBLIC_API_URL = "https://your-backend-url.com"
+  NEXT_PUBLIC_API_URL = "https://powergridsih.onrender.com"
   NODE_VERSION = "18"
