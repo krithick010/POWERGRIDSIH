@@ -1,12 +1,14 @@
 {
-  "name": "my-v0-project",
+  "name": "powergrid-sih-ticketing",
   "version": "0.1.0",
   "private": true,
   "scripts": {
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
-    "start": "next start"
+    "start": "next start",
+    "export": "next build",
+    "preview": "npx serve out -p 3000"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
