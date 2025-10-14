@@ -7,28 +7,28 @@
 # Redirect all API calls to your backend (you'll need to deploy backend separately)
 [[redirects]]
   from = "/api/*"
-  to = "https://your-backend-url.com/api/:splat"
+  to = "https://powergridsih.onrender.com/api/:splat"
   status = 200
   force = true
 
 # Redirect chatbot API
 [[redirects]]
   from = "/chatbot"
-  to = "https://your-backend-url.com/chatbot"
+  to = "https://powergridsih.onrender.com/chatbot"
   status = 200
   force = true
 
 # Redirect tickets API
 [[redirects]]
   from = "/tickets/*"
-  to = "https://your-backend-url.com/tickets/:splat"
+  to = "https://powergridsih.onrender.com/tickets/:splat"
   status = 200
   force = true
 
 # Redirect KB API
 [[redirects]]
   from = "/kb/*"
-  to = "https://your-backend-url.com/kb/:splat"
+  to = "https://powergridsih.onrender.com/kb/:splat"
   status = 200
   force = true
 
